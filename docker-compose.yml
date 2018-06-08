@@ -1,0 +1,7 @@
+version: '3.3'
+services:
+  python:
+    image: python
+    volumes:
+    - ./:/usr/src/spectre-json2csv/
+    command: python /usr/src/spectre-json2csv/spectre-json2csv.py
