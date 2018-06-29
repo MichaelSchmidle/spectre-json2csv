@@ -22,8 +22,14 @@ accounts = requests.get('https://www.saltedge.com/api/v4/accounts', headers = he
 for account in accounts.json()['data']:
     transactions = requests.get('https://www.saltedge.com/api/v4/transactions?account_id=' + account['id'], headers = headers)
     if len(transactions.json()['data']) != 0:
-        with open('json/' + account['id'] + '.json', 'w') as jsonFile:
+        with open('json/' + account['id'] + account['extra']['account_name'] + '.json', 'w') as jsonFile:
             json.dump(transactions.json()['data'], jsonFile)
+        nextTransactionId = transactions.json()['meta']['next_id']
+        while nextTransactionId:
+            transactions = requests.get('https://www.saltedge.com/api/v4/transactions?account_id=' + account['id'] + '&from_id=' + str(nextTransactionId), headers = headers)
+            with open('json/' + account['id'] + account['extra']['account_name'] + str(nextTransactionId) + '.json', 'w') as jsonFile:
+                json.dump(transactions.json()['data'], jsonFile)
+            nextTransactionId = transactions.json()['meta']['next_id']
 
 # Create array of JSON files to parse
 jsonFilePaths = glob.glob('json/*.json')
