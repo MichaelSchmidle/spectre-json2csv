@@ -1,14 +1,32 @@
-import os
-import glob
 import json
+import requests
+import glob
 from datetime import datetime
 import csv
 
-# Determine base directory of this script
-baseDir = os.path.dirname(__file__) + '/'
+# Load environment variables
+with open('env.json') as jsonFile:
+    env = json.load(jsonFile)
+
+# Call Spectre API and retrieve transaction files
+headers = {
+    'Accept': 'application/json',
+    'Content-type': 'application/json',
+    'App-id': env['APP_ID'],
+    'Secret': env['SECRET'],
+    'Customer-secret': env['CUSTOMER_SECRET'],
+    'Login-secret': env['LOGIN_SECRET']
+    }
+
+accounts = requests.get('https://www.saltedge.com/api/v4/accounts', headers = headers)
+for account in accounts.json()['data']:
+    transactions = requests.get('https://www.saltedge.com/api/v4/transactions?account_id=' + account['id'], headers = headers)
+    if len(transactions.json()['data']) != 0:
+        with open('json/' + account['id'] + '.json', 'w') as jsonFile:
+            json.dump(transactions.json()['data'], jsonFile)
 
 # Create array of JSON files to parse
-jsonFilePaths = glob.glob(baseDir + 'json/*.json')
+jsonFilePaths = glob.glob('json/*.json')
 
 # Per JSON file
 for jsonFilePath in jsonFilePaths:
@@ -20,11 +38,10 @@ for jsonFilePath in jsonFilePaths:
         closingDate = transactions[len(transactions) - 1]['made_on']
 
         # Generate corresponding CSV file with header row
-        with open(baseDir + 'csv/' + str(account) + '-' + closingDate + '.csv', 'w') as csvFile:
+        with open('csv/' + str(account) + '-' + closingDate + '.csv', 'w') as csvFile:
             writer = csv.writer(csvFile)
             writer.writerow(['Account ID', 'Amount', 'Currency', 'Date', 'Info', 'Reference'])
 
             # Write each transaction as row in CSV file
             for transaction in transactions:
                 writer.writerow([account, transaction['amount'], transaction['currency_code'], transaction['made_on'], transaction['description'], transaction['id']])
-
