@@ -44,8 +44,8 @@ for jsonFilePath in jsonFilePaths:
         closingDate = transactions[len(transactions) - 1]['made_on']
 
         # Generate corresponding CSV file with header row
-        with open('csv/' + str(account) + '-' + closingDate + '.csv', 'w') as csvFile:
-            writer = csv.writer(csvFile)
+        with open('csv/' + str(account) + '-' + closingDate + '.csv', 'w', newline='') as csvFile:
+            writer = csv.writer(csvFile, delimiter=";")
             writer.writerow(['Account ID', 'Amount', 'Currency', 'Date', 'Info', 'Reference'])
 
             # Write each transaction as row in CSV file
